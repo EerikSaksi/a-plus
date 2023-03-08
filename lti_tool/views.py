@@ -18,6 +18,7 @@ from exercise.viewbase import ExerciseBaseView
 from exercise.models import LearningObject, BaseExercise
 from exercise.views import ExerciseView, SubmissionView
 from userprofile.models import UserProfile
+from lib.localization_syntax import parse_localized
 from lib.viewbase import BaseTemplateView, BaseRedirectView, BaseMixin
 from authorization.permissions import ACCESS
 from .utils import get_tool_conf, get_launch_data_storage, get_launch_url
@@ -263,6 +264,15 @@ class LtiSelectModuleView(LtiSelectContentMixin, CourseModuleBaseView):
                 li.set_tag(str(e.id)).set_score_maximum(e.max_points).set_label(str(e))
                 ags.find_or_create_lineitem(li)
 
+        parsed_languages = parse_localized(str(self.module))
+
+        # is multilingual
+        if parsed_languages[0][0] is not None:
+            # either in english, or whatever the default language is
+            title = next((lang for lang in parsed_languages if lang[0] == 'en'), parsed_languages[0])[1]
+        else:
+            title = str(self.module)
+
         # Send activity settings
         deep_link = self.message_launch.get_deep_link()
         resource = DeepLinkResource()
@@ -272,7 +282,7 @@ class LtiSelectModuleView(LtiSelectContentMixin, CourseModuleBaseView):
                 "instance_slug": kwargs['instance_slug'],
                 "module_slug": kwargs['module_slug']
             })
-            .set_title(str(self.module)))
+            .set_title(title))
         return HttpResponse(deep_link.output_response_form([resource]))
 
     # Get list of exercises in module
@@ -314,6 +324,14 @@ class LtiSelectExerciseView(LtiSelectContentMixin, ExerciseBaseView):
         # Send activity settings
         deep_link = self.message_launch.get_deep_link()
         resource = DeepLinkResource()
+        parsed_languages = parse_localized(str(self.exercise))
+
+        # is multilingual
+        if parsed_languages[0][0] is not None:
+            # either in english, or whatever the default language is
+            title = next((lang for lang in parsed_languages if lang[0] == 'en'), parsed_languages[0])[1]
+        else:
+            title = str(self.exercise)
         (resource.set_url(request.build_absolute_uri(reverse('lti-launch')))
             .set_custom_params({
                 "course_slug": kwargs['course_slug'],
@@ -321,5 +339,5 @@ class LtiSelectExerciseView(LtiSelectContentMixin, ExerciseBaseView):
                 "module_slug": kwargs['module_slug'],
                 "exercise_path": kwargs['exercise_path']
             })
-            .set_title(str(self.exercise)))
+            .set_title(title))
         return HttpResponse(deep_link.output_response_form([resource]))
