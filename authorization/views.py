@@ -2,6 +2,7 @@ from django.contrib.auth.mixins import AccessMixin
 from django.contrib.auth.views import redirect_to_login
 from django.contrib.messages import error as error_message
 from django.core.exceptions import PermissionDenied
+from django.shortcuts import render
 
 from .exceptions import ValidationFailed
 from .permissions import NoPermission
@@ -67,7 +68,7 @@ class AuthenticationMixin(AccessMixin):
 
         # For authenticated users, raise exception.
         if request.user.is_authenticated:
-            raise PermissionDenied(message)
+            return render(template_name="403.html", request=request)
 
         # Redirect not authenticated users to login
         return redirect_to_login(request.get_full_path(),

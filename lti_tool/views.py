@@ -184,6 +184,10 @@ class LtiExerciseView(LtiSessionMixin, ExerciseView):
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs, redirect_view='lti-submission')
 
+    def get_common_objects(self):
+        super().get_common_objects()
+        self.disable_staff_nav = True
+        self.note("disable_staff_nav")
 
 class LtiSubmissionView(LtiSessionMixin, SubmissionView):
 
